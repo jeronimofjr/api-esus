@@ -1,0 +1,369 @@
+openapi: 3.0.3
+
+info:
+  title:   API de Dados de Saúde
+  description: >
+    API REST para Acesso a Dados de Saúde.
+    Esta API é somente leitura (GET), focada em visualização e análise de dados.
+  version: "2.0.0"
+
+servers:
+  - url: http://localhost:8001/api/v1
+    description: Versão atual da API
+
+tags:
+  - name: Atendimentos
+    description: Consultas de atendimentos
+  - name: Sistema
+    description: Endpoints institucionais e de saúde da API
+
+paths:
+  /atendimentos:
+    get:
+      tags:
+        - Atendimentos
+      summary: Listar atendimentos
+      description: Retorna uma lista paginada de atendimentos, com possibilidade de filtros.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: unidade
+          in: query
+          schema:
+            type: string
+          description: Nome da unidade de saúde
+        - name: condicao_saude
+          in: query
+          schema:
+            type: string
+            enum: ['hipertensao', 'diabetes', 'ferida vascular', 'dengue', 'tuberculose']
+          description: Condição de saúde do paciente
+        - name: data_atendimento
+          in: query
+          schema:
+            type: string
+            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Data do atendimento (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Lista de atendimentos
+          content:
+            application/json:
+              schema:
+                      $ref: '#/components/schemas/AtendimentosPaginatedResponse'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationError:
+                  summary: Erro de validação
+                  value:
+                    success: false
+                    error:
+                      code: VALIDATION_ERROR
+                      message: Erro de validação nos dados enviados
+                      details:
+                        data_inicio:
+                          - Formato inválido
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Recurso não encontrado
+                  value:
+                    success: false
+                    error:
+                      code: NOT_FOUND
+                      message: Recurso não encontrado
+                      details: null
+
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                internalError:
+                  summary: Erro interno
+                  value:
+                    success: false
+                    error:
+                      code: INTERNAL_SERVER_ERROR
+                      message: Erro interno do servidor
+                      details: null
+
+  /atendimentos/{atendimento_id}:
+    get:
+      tags:
+        - Atendimentos
+      summary: Buscar atendimento por ID
+      parameters:
+        - name: atendimento_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Atendimento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AtendimentoResponse'
+        '404':
+          description: Atendimento não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /atendimentos/periodo:
+    get:
+      tags:
+        - Atendimentos
+      summary: Buscar atendimentos por período
+      parameters:
+        - name: data_inicio
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Data inicial (YYYY-MM-DD)
+        - name: data_fim
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Data final (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Lista de atendimentos no período informado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AtendimentosResponse'
+
+  /info:
+    get:
+      tags:
+        - Sistema
+      summary: Informações da API
+      responses:
+        '200':
+          description: Informações institucionais da API
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiInfoResponse'
+
+
+  /health-check:
+    get:
+      tags:
+        - Sistema
+      summary: Health check da API
+      responses:
+        '200':
+          description: Status da API
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+
+components:
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+      description: Página atual
+
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 10
+        minimum: 1
+      description: Quantidade de itens por página
+
+  schemas:
+    ApiInfoResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Painel SUS - API REST
+        version:
+          type: string
+          example: "2.0.0"
+        endpoints:
+          type: object
+          additionalProperties:
+            type: string
+    HealthCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: Painel SUS - API
+        version:
+          type: string
+          example: "2.0.0"
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Erro de validação nos dados enviados
+            details:
+              nullable: true
+              oneOf:
+                - type: object
+                - type: array
+    Atendimento:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Elisa Pinto
+        nascimento:
+          type: string
+          format: date
+          example: 1978-04-05
+        cns:
+          type: string
+          example: "75983412655"
+        cpf:
+          type: string
+          example: "***.***.***-87"
+        unidade:
+          type: string
+          example: Unidade de Saúde Maria Alice
+        data_atendimento:
+          type: string
+          format: date
+          example: 2023-08-10
+        condicao_saude:
+          type: string
+          example: Hipertensão
+
+    AtendimentosList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Atendimento'
+      example:
+        - id: 1
+          nome: Elisa Pinto
+          nascimento: 1978-04-05
+          cns: "75983412655"
+          cpf: "***.***.***-87"
+          unidade: Unidade de Saúde Maria Alice
+          data_atendimento: 2023-08-10
+          condicao_saude: hipertensao
+        - id: 2
+          nome: João Silva
+          nascimento: 1985-07-15
+          cns: "83294756123"
+          cpf: "***.***.***-45"
+          unidade: UBS Central
+          data_atendimento: 2023-08-11
+          condicao_saude: diabetes 
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+
+    AtendimentoResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            atendimento:
+              $ref: '#/components/schemas/Atendimento'
+        total_items:
+          type: integer
+          example: 1
+
+    AtendimentosResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            atendimentos:
+              type: array
+              items:
+                $ref: '#/components/schemas/Atendimento'
+        total_items:
+          type: integer
+          example: 10
+
+    AtendimentosPaginatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            atendimentos:
+              type: array
+              items:
+                $ref: '#/components/schemas/Atendimento'
+        total_items:
+          type: integer
+          example: 120
+        pagination:
+          $ref: '#/components/schemas/Pagination'
