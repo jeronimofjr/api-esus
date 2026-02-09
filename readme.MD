@@ -1,46 +1,24 @@
 # API REST para Acesso a Dados de Saúde
 
-Este projeto consiste no desenvolvimento de uma API REST para acesso estruturado a dados de atendimentos de saúde, originalmente exportados de um sistema de terceiros em formato CSV. O objetivo é disponibilizar esses dados de forma segura, padronizada e eficiente para consumo por equipes de Ciência de Dados e outros sistemas corporativos.
+Este projeto consiste no desenvolvimento de uma API REST para acesso estruturado a dados de atendimentos de saúde, originalmente exportados de um sistema de terceiros em formato CSV. O objetivo é disponibilizar esses dados de forma segura, padronizada e eficiente para consumo por uma equipe de Ciência de dados.
 
-A API foi desenvolvida em Python utilizando o framework Flask, seguindo boas práticas de arquitetura, validação de dados, testes automatizados e documentação.
-
-# Orientações
+A API foi desenvolvida em Python utilizando o micro-framework Flask, seguindo boas práticas de arquitetura, validação de dados, testes automatizados e documentação.
 
 O banco de dados é representado pelo arquivo `atendimentos.csv`
 
 # Implementação da API
 
-A API expõe endpoints REST para consulta de atendimentos de saúde, suportando paginação de resultados, filtros por período e unidade, validação rigorosa de entradas e respostas padronizadas. A aplicação foi estruturada em camadas bem definidas, com foco em manutenibilidade, testabilidade e clareza do fluxo de dados.
-
-## Tecnologias
-
-| Tecnologia        | Versão   | Descrição                                                                                                                            |
-| ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Python            | `3.1.0`  | Linguagem utilizada para implementar a lógica de negócio e regras de domínio da aplicação.                                           |
-| Flask             | `3.1.2`  | Framework web para desenvolvimento de API REST corporativa, com foco em simplicidade e controle do fluxo de requisições.             |
-| SQLAlchemy        | `2.0.46` | ORM utilizado para mapeamento objeto-relacional, abstração do acesso a dados e maior controle sobre persistência e transações.       |
-| Marshmallow       | `9.0.2`  | Validação, serialização e sanitização de dados sensíveis, contribuindo para a integridade das informações e conformidade com a LGPD. |
-| Pytest            | `9.0.2`  | Testes automatizados para garantir confiabilidade, consistência e segurança da API.                                                  |
-| Docker            | `26.1.0` | Containerização da aplicação, assegurando isolamento, reprodutibilidade e padronização do ambiente.                                  |
-| Docker Compose    |          | Orquestração dos serviços da aplicação, facilitando o setup e execução em ambientes corporativos.                                    |
-| OpenAPI (Swagger) |          | Documentação padronizada da API, permitindo transparência dos contratos e facilitando auditorias e integrações.                      |
-
-## Pré-requisitos
-
-- Docker >= 26.1.0
-- Docker Compose >= 2.0
-- 2GB RAM disponível
-- Porta **8001** livre
+A API expõe endpoints para consulta de atendimentos de saúde, suportando paginação de resultados, **filtros** por período e unidade, validação de entradas e respostas padronizadas. A aplicação foi estruturada em camadas, com foco em manutenibilidade e testabilidade.
 
 ## Arquitetura
 
 O projeto utiliza arquitetura em camadas, promovendo separação de responsabilidades, facilidade de manutenção e testes:
 
-- **Controllers:** camada HTTP, responsável por receber requisições, aplicar validações e retornar respostas padronizadas
-- **Services:** regras de negócio e orquestração dos fluxos da aplicação
-- **Repositories:** acesso e abstração da camada de dados
-- **Schemas:** validação, serialização e desserialização de dados de entrada e saída
-- **Models:** representação das entidades de domínio
+- **Controllers:** Camada HTTP, responsável por receber requisições, aplicar validações e retornar respostas padronizadas.
+- **Services:** Regras de negócio e orquestração dos fluxos da aplicação.
+- **Repositories:** Acesso e abstração da camada de dados.
+- **Schemas:** Validação, serialização e desserialização de dados de entrada e saída.
+- **Models:** Representação das entidades de domínio.
 
 ## Funcionalidades
 
@@ -51,6 +29,18 @@ O projeto utiliza arquitetura em camadas, promovendo separação de responsabili
 - Tratamento centralizado de erros por meio de handlers globais
 - Documentação interativa da API utilizando OpenAPI (Swagger)
 - Testes automatizados cobrindo rotas e schemas, assegurando confiabilidade e estabilidade da aplicação
+
+## Tecnologias
+
+| Tecnologia                      | Versão   |
+| ------------------------------- | -------- |
+| Python                          | `3.10`   |
+| Flask                           | `3.1.2`  |
+| Marshmallow                     | `4.2.1`  |
+| SQLAlchemy                      | `2.0.46` |
+| Pytest                          | `9.0.2`  |
+| Docker                          | `26.1.0` |
+| Swagger UI (`flask-swagger-ui`) | `4.11.1` |
 
 ## Estrutura
 
@@ -100,18 +90,23 @@ O projeto utiliza arquitetura em camadas, promovendo separação de responsabili
     └── openapi.yml
 ```
 
-## Instruções de uso
+## Como executar o projeto
 
-Clone o repositório do projeto:
+### Pré-requisitos
+
+- Docker >= 26.1.0
+- Porta **8001** livre
+
+**Clone o repositório do projeto:**
 
 ```bash
-git clone <url>
+git clone https://github.com/jeronimofjr/api-esus
 ```
 
-Acesse o diretório do projeto
+**Acesse o diretório do projeto**
 
 ```bash
-cd <nome-do-diretorio>
+cd /api-esus
 ```
 
 Na raiz do projeto crie um arquivo `.env` e o preecha de acordo com o exemplo dado no arquivo `.env.example`
@@ -143,9 +138,8 @@ A documentação interativa da API pode ser acessada via Swagger:
 | GET    | `/atendimentos/{id}`                           | Filtra atendimentos por id                                       |
 | GET    | `/atendimentos/stats`                          | Lista estatísticas dos Atendimentos                              |
 | GET    | `/info`                                        | Lista informações da API, endpoints, docs, nome, status e versão |
-| GET    | `/health-check`                                | Status da API                                                    |
 
-### Exemplo de uso
+### Exemplos de uso
 
 **Listagem simples com paginação**
 
@@ -220,6 +214,7 @@ curl http://127.0.0.1:8001/api/v1/atendimentos/stats
 ```
 
 **Quando usar:**
+
 Para dashboards, indicadores e métricas de saúde.
 
 **Saída:**
@@ -247,4 +242,5 @@ http://127.0.0.1:8001/api/v1/atendimentos?condicao_saude=diabetes&unidade=Unidad
 ```
 
 **Quando usar:**
+
 Para consultas refinadas e cruzamento de dados.
